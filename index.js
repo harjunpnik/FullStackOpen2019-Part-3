@@ -14,50 +14,28 @@ app.use(morgan(':method :url :status :response-time ms :content'))
 
 morgan.token('content', function (req, res) { return JSON.stringify(req.body) })
 
-let persons = [
-    {
-        name: "Arto Hellas",
-        number: "040-123456",
-        id: 1
-    },
-    {
-        name: "Ada Lovelace",
-        number: "39-44-5323523",
-        id: 2
-    },
-    {
-        name: "Dan Abramov",
-        number: "12-43-234345",
-        id: 3
-    },
-    {
-        name: "Mary Poppendieck",
-        number: "39-23-6423122",
-        id: 4
-    },
-  ]
-
 //  GET ALL PERSONS
-app.get('/api/persons', (req, res) => {
+app.get('/api/persons', (req, res, next) => {
   Person.find({}).then(person => {
     res.json(person.map(pers => pers.toJSON()))
   })
+  .catch(error => next(error))
 })
 
 //  GET PERSON WITH ID
-app.get('/api/persons/:id', (req, res) => {
-    const id = Number(req.params.id)
-    const person = persons.find(person => person.id === id)
-
+app.get('/api/persons/:id', (req, res, next) => {
+  Person.findById(req.params.id).then(person => {
     if(person){
-        res.json(person)
-    } else{
-        res.status(404).end()
-    }
+      res.json(person.toJSON())
+  } else{
+      res.status(404).end()
+  }
+  })
+  .catch(error => next(error))
 })
 
 //  POST PERSON
-app.post('/api/persons', (req, res) => {
+app.post('/api/persons', (req, res, next) => {
     
     if (!req.body.number || !req.body.name) {
         return res.status(400).json({ 
@@ -91,7 +69,7 @@ app.put('/api/persons/:id', (req, res, next) => {
 })
   
 //  DELETE PERSON WITH ID
-app.delete('/api/persons/:id', (req, res,next) => {
+app.delete('/api/persons/:id', (req, res, next) => {
   Person.findByIdAndRemove(req.params.id)
     .then(result =>{
       res.status(204).end()
@@ -107,11 +85,11 @@ app.get('/info', (req, res) => {
     </div>`)
 })
 
-const errorHandler = (error, request, response, next) => {
+const errorHandler = (error, req, res, next) => {
   console.error(error.message)
 
   if (error.name === 'CastError' && error.kind === 'ObjectId') {
-    return response.status(400).send({ error: 'malformatted id' })
+    return res.status(400).send({ error: 'malformatted id' })
   } 
 
   next(error)
