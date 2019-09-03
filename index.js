@@ -73,7 +73,23 @@ app.post('/api/persons', (req, res) => {
     person.save().then(savedPerson => {
       res.json(savedPerson.toJSON())
     })
+    .catch(error => next(error))
   })
+
+//  UPDATE PERSON
+app.put('/api/persons/:id', (req, res, next) => {
+  const person = {
+    name:req.body.name,
+    number: req.body.number
+  }
+
+  Person.findByIdAndUpdate(req.params.id, person, { new: true })
+    .then(updatePerson => {
+      res.json(updatePerson.toJSON())
+    })
+    .catch(error => next(error))
+})
+  
 //  DELETE PERSON WITH ID
 app.delete('/api/persons/:id', (req, res,next) => {
   Person.findByIdAndRemove(req.params.id)
